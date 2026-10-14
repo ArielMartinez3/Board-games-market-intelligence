@@ -25,7 +25,7 @@ PALETTE = {
 
 SEQUENTIAL_CMAP = LinearSegmentedColormap.from_list(
     "board_games_market",
-    [PALETTE["sand"], PALETTE["teal"], PALETTE["blue"]],
+    [PALETTE["muted"], PALETTE["teal"], PALETTE["blue"]],
 )
 
 
@@ -115,9 +115,10 @@ def graficar_complejidad_adopcion(
         df[duration_col],
         c=df[adoption_col],
         cmap=SEQUENTIAL_CMAP,
-        alpha=0.58,
+        alpha=0.78,
         s=28,
-        linewidth=0,
+        edgecolors=PALETTE["ink"],
+        linewidth=0.12,
     )
     ax.set_yscale("log")
     colorbar = fig.colorbar(points, ax=ax, pad=0.02)
