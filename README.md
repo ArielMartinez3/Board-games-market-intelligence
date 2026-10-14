@@ -10,6 +10,13 @@ El trabajo combina integración y limpieza de datos, procesamiento de lenguaje n
 Un editor necesita decidir qué prototipos merecen más investigación, desarrollo o inversión. El análisis usa información disponible antes del lanzamiento, como cantidad de jugadores, duración, edad recomendada, mecánicas y categorías. Después compara esas características con la valoración y la adopción observadas en BoardGameGeek.
 
 La conclusión principal es equilibrada: **el diseño aporta una señal útil, pero no alcanza para predecir por sí solo el éxito comercial**. Arte, precio, calidad de componentes, marketing, distribución y comunidad también importan y no están representados en este dataset.
+
+### La idea en una imagen
+
+Esta es la lectura más importante del proyecto para una audiencia no técnica: el diseño ayuda a orientar la decisión, pero no reemplaza validar el mercado.
+
+![Mensaje ejecutivo: el diseño aporta una señal, pero no explica todo](docs/figures/executive-takeaway.png)
+
 ## Resultados principales
 
 La ejecución actual del pipeline produce 21.475 juegos después de integrar las fuentes, filtrar registros con menos de 30 valoraciones y sanear campos físicos. En la integración original se observan 21.831 registros de ratings, 21.631 registros de detalles y 200 IDs sin correspondencia completa.
@@ -49,6 +56,8 @@ La matriz cruza recepción crítica con demanda relativa no satisfecha, calculad
 Se muestran ROC-AUC y Precision-Recall para no ocultar el efecto del desbalance entre el 15% superior y el resto del catálogo.
 
 ![Desempeño de modelos](docs/figures/model-performance.png)
+
+La figura ejecutiva es la recomendada para una presentación general. Las curvas ROC y Precision-Recall quedan como respaldo técnico para una entrevista o revisión metodológica.
 ## Cómo se construyó el análisis
 
 ### 1. Integración y calidad de datos
@@ -86,6 +95,7 @@ Los gráficos se generan desde [visualization.py](visualization.py), con una pal
 ├── data_cleaning.py                                  # Descarga, integración y saneamiento
 ├── text_processing.py                                # Limpieza de texto y NMF
 ├── modeling.py                                       # Preparación y evaluación predictiva
+├── segmentation.py                                   # Selección de k y perfiles de producto
 ├── visualization.py                                  # Gráficos reutilizables
 ├── generate_figures.py                               # Generación de imágenes del README
 ├── requirements.txt                                  # Dependencias reproducibles

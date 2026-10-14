@@ -2,7 +2,7 @@
 
 import html
 import re
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 from nltk.corpus import stopwords
 import pandas as pd
 from sklearn.decomposition import NMF
@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 def limpiar_texto_descripcion(texto: object) -> str:
   """Limpia entidades HTML, tags, caracteres no alfanuméricos y normaliza texto."""
-  if pd.isna(texto) or not isinstance(texto, str):
+  if not isinstance(texto, str) or pd.isna(texto):
     return ""
 
   # 1. Decodificar entidades HTML (&amp;, &#10;, &quot;)
@@ -31,10 +31,10 @@ def limpiar_texto_descripcion(texto: object) -> str:
 
 def extraer_topicos_nmf(
   textos: List[str],
-    n_topicos: int = 5,
-    max_features: int = 3000,
-    random_state: int = 42,
-) -> Tuple[NMF, TfidfVectorizer, object, Dict[str, List[str]]]:
+  n_topicos: int = 5,
+  max_features: int = 3000,
+  random_state: int = 42,
+) -> Tuple[NMF, TfidfVectorizer, Any, Dict[str, List[str]]]:
   """Aplica TF-IDF + NMF (Non-negative Matrix Factorization) para descubrir tópicos temáticos.
 
   NMF resulta más veloz y genera tópicos más cohesivos y diferenciados que LDA

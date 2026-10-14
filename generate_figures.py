@@ -9,6 +9,7 @@ from text_processing import extraer_topicos_nmf, limpiar_texto_descripcion
 from visualization import (
     graficar_complejidad_adopcion,
     graficar_evolucion_mercado,
+    graficar_mensaje_ejecutivo,
     graficar_matriz_oportunidad,
     graficar_topicos_vs_rating,
 )
@@ -76,9 +77,17 @@ def main() -> None:
     results["importance_figure"].savefig(
         OUTPUT_DIR / "feature-importance.png", bbox_inches="tight"
     )
+    graficar_mensaje_ejecutivo(
+        r2_value=float(
+            results["regression"].loc[
+                results["regression"]["Modelo"] == "Gradient boosting", "R2"
+            ].iloc[0]
+        ),
+        output_path=str(OUTPUT_DIR / "executive-takeaway.png"),
+    ).clear()
     for figure, _ in figures:
         figure.clear()
-    print(f"Generated {len(figures) + 2} figures in {OUTPUT_DIR}")
+    print(f"Generated {len(figures) + 3} figures in {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

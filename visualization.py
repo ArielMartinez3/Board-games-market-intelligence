@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import pandas as pd
 import seaborn as sns
 
@@ -17,7 +18,15 @@ PALETTE = {
     "green": "#3A7D44",
     "red": "#B54747",
     "sand": "#F4EFE6",
+    "light_blue": "#E7F0F7",
+    "light_teal": "#E7F3F1",
+    "light_orange": "#FFF1DE",
 }
+
+SEQUENTIAL_CMAP = LinearSegmentedColormap.from_list(
+    "board_games_market",
+    [PALETTE["sand"], PALETTE["teal"], PALETTE["blue"]],
+)
 
 
 def configurar_estilo() -> None:
@@ -105,7 +114,7 @@ def graficar_complejidad_adopcion(
         df[mechanics_col],
         df[duration_col],
         c=df[adoption_col],
-        cmap="viridis",
+        cmap=SEQUENTIAL_CMAP,
         alpha=0.58,
         s=28,
         linewidth=0,
@@ -193,9 +202,9 @@ def graficar_matriz_oportunidad(
     x_max = working[rating_col].max() + 0.2
 
     fig, ax = plt.subplots(figsize=(11, 6.5))
-    ax.axvspan(x_cut, x_max, y_cut / y_max, 1, color="#E7F3E8", alpha=0.85)
-    ax.axvspan(x_cut, x_max, 0, y_cut / y_max, color="#E7F0F7", alpha=0.85)
-    ax.axvspan(x_min, x_cut, y_cut / y_max, 1, color="#FFF5DD", alpha=0.85)
+    ax.axvspan(x_cut, x_max, y_cut / y_max, 1, color=PALETTE["light_teal"], alpha=0.9)
+    ax.axvspan(x_cut, x_max, 0, y_cut / y_max, color=PALETTE["light_blue"], alpha=0.9)
+    ax.axvspan(x_min, x_cut, y_cut / y_max, 1, color=PALETTE["light_orange"], alpha=0.9)
     ax.scatter(
         working[rating_col],
         working[demand_col],
@@ -208,7 +217,7 @@ def graficar_matriz_oportunidad(
     ax.axhline(y_cut, color=PALETTE["muted"], linestyle="--", linewidth=1)
     ax.text(x_max, y_max * 0.94, "OPORTUNIDAD\ncalidad + demanda", ha="right", va="top", color=PALETTE["green"], weight="bold")
     ax.text(x_max, y_max * 0.06, "CATÁLOGO CONSOLIDADO", ha="right", va="bottom", color=PALETTE["blue"], weight="bold")
-    ax.text(x_min, y_max * 0.94, "HYPE A VALIDAR", ha="left", va="top", color="#9A6A00", weight="bold")
+    ax.text(x_min, y_max * 0.94, "HYPE A VALIDAR", ha="left", va="top", color=PALETTE["orange"], weight="bold")
     ax.set_xlim(x_min, x_max)
     ax.set_ylim(0, y_max)
     ax.set_title("Matriz editorial: calidad crítica frente a demanda insatisfecha")
@@ -223,6 +232,47 @@ def graficar_matriz_oportunidad(
         fontsize=9,
     )
     sns.despine(ax=ax)
+    fig.tight_layout()
+    _guardar_si_corresponde(fig, output_path)
+    return fig
+
+
+def graficar_mensaje_ejecutivo(
+    r2_value: float = 0.276,
+    output_path: Optional[str] = None,
+) -> plt.Figure:
+    """Resume para público general cuánto explica el diseño según el modelo."""
+    configurar_estilo()
+    explained = max(0.0, min(float(r2_value), 1.0))
+    unexplained = 1 - explained
+    fig, ax = plt.subplots(figsize=(10, 2.8))
+    ax.barh(
+        [0],
+        [explained],
+        color=PALETTE["teal"],
+        height=0.42,
+        label="Señal explicada por el diseño",
+    )
+    ax.barh(
+        [0],
+        [unexplained],
+        left=[explained],
+        color=PALETTE["light_blue"],
+        edgecolor=PALETTE["blue"],
+        linewidth=0.8,
+        height=0.42,
+        label="Factores que el dataset no observa",
+    )
+    ax.text(explained / 2, 0, f"{explained:.1%}", ha="center", va="center", weight="bold", color="white")
+    ax.text(explained + unexplained / 2, 0, f"{unexplained:.1%}", ha="center", va="center", weight="bold", color=PALETTE["ink"])
+    ax.set_xlim(0, 1)
+    ax.set_yticks([])
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
+    ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"])
+    ax.set_title("El diseño aporta una señal, pero no explica todo el éxito")
+    ax.set_xlabel("Parte de la variación de la valoración crítica explicada en el test")
+    ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.42), ncol=2)
+    sns.despine(ax=ax, left=True)
     fig.tight_layout()
     _guardar_si_corresponde(fig, output_path)
     return fig
