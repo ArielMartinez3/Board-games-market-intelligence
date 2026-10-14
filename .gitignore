@@ -1,0 +1,22 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter and local tooling
+.ipynb_checkpoints/
+.vscode/
+
+# Generated analysis artifacts
+juegos_limpios.csv
+data/
+outputs/
+*.png
+*.html
+
+# Local OS files
+.DS_Store
+Thumbs.db
