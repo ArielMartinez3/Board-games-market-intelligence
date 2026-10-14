@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 URL_BASE = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-25/"
+MAX_JUGADORES_ANALISIS = 20
 
 
 def descargar_datos(base_url: str = URL_BASE) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -112,6 +113,8 @@ def sanear_jugadores_y_duracion(
       df_out["minplayers"],
       df_out["maxplayers"],
   )
+  df_out["maxplayers_atipico"] = df_out["maxplayers"] > MAX_JUGADORES_ANALISIS
+  df_out["maxplayers"] = df_out["maxplayers"].clip(upper=MAX_JUGADORES_ANALISIS)
 
   # 3. Tratamiento de duración (playingtime)
   # Si playingtime == 0 pero min/max play time tienen dato positivo, imputar promedio

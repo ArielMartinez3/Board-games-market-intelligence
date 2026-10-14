@@ -24,8 +24,8 @@ La ejecución actual del pipeline produce 21.475 juegos después de integrar las
 
 | Pregunta | Resultado medido | Lectura sencilla |
 | --- | --- | --- |
-| ¿Qué tan informativo es el diseño para explicar la valoración? | Gradient Boosting: $R^2 = 0.276$; MAE = 0.179 | Las variables de diseño explican una parte relevante, pero la mayor parte de la variación queda fuera del modelo |
-| ¿Se puede ordenar el potencial de entrar al top 15%? | Random Forest: ROC-AUC = 0.832; Average Precision = 0.474 | El modelo separa mejor que el azar, aunque todavía requiere validación editorial |
+| ¿Qué tan informativo es el diseño para explicar la valoración? | Gradient Boosting: $R^2 = 0.283$; MAE = 0.179 | Las variables de diseño explican una parte relevante, pero la mayor parte de la variación queda fuera del modelo |
+| ¿Se puede ordenar el potencial de entrar al top 15%? | Random Forest: ROC-AUC = 0.831; Average Precision = 0.473 | El modelo separa mejor que el azar, aunque todavía requiere validación editorial |
 | ¿Qué ocurre con la clase minoritaria? | El top 15% representa la referencia de Average Precision | Por eso se informa Precision-Recall además de ROC-AUC |
 | ¿Qué patrones temáticos aparecen? | NMF identifica construcción urbana, guerra, cartas, dados y colocación de losetas | Son agrupaciones descriptivas, no etiquetas objetivas de género |
 
@@ -67,6 +67,7 @@ También se aplica:
 - un mínimo de 30 valoraciones para reducir la inestabilidad de muestras muy pequeñas;
 - imputación de duración a partir de `minplaytime` y `maxplaytime` cuando es posible;
 - exclusión de duraciones superiores a 720 minutos para evitar que casos extremos dominen el análisis comercial;
+- marcado y limitación de `maxplayers` superiores a 20 para que pocos valores extremos no creen perfiles artificiales;
 - parseo seguro de listas y creación de `num_mecanicas` y `num_categorias`.
 
 La implementación está en [data_cleaning.py](data_cleaning.py).
@@ -91,7 +92,7 @@ Los gráficos se generan desde [visualization.py](visualization.py), con una pal
 
 ```text
 .
-├── Trabajo_Practico_Integrador_Ariel_Martinez.ipynb  # Informe narrativo completo
+├── board_games_market_intelligence_report.ipynb      # Notebook principal para entregar
 ├── data_cleaning.py                                  # Descarga, integración y saneamiento
 ├── text_processing.py                                # Limpieza de texto y NMF
 ├── modeling.py                                       # Preparación y evaluación predictiva
@@ -134,7 +135,7 @@ python generate_figures.py
 El primer comando descarga las fuentes y genera `juegos_limpios.csv`. El segundo actualiza las imágenes de `docs/figures/` y recalcula las métricas de modelado.
 ### 4. Explorar el informe
 
-Abrir [Trabajo_Practico_Integrador_Ariel_Martinez.ipynb](Trabajo_Practico_Integrador_Ariel_Martinez.ipynb) en VS Code o Jupyter y ejecutar las celdas en orden. El notebook contiene la explicación completa de las preguntas de investigación, las decisiones de saneamiento, el análisis exploratorio, los clusters y la evaluación predictiva.
+El entregable autónomo es [board_games_market_intelligence_report.ipynb](board_games_market_intelligence_report.ipynb). Contiene la carga oficial de datos, las funciones de limpieza, el análisis exploratorio, el modelado de tópicos, el agrupamiento, los modelos, las visualizaciones y las conclusiones dentro del propio archivo.
 
 ## Limitaciones y uso responsable
 
