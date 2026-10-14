@@ -16,6 +16,8 @@ data/
 outputs/
 *.png
 *.html
+!docs/figures/
+!docs/figures/*.png
 
 # Local OS files
 .DS_Store

@@ -1,8 +1,6 @@
 """Módulo de limpieza, validación e integración de datos de juegos de mesa."""
 
 import ast
-import html
-import re
 from typing import List, Tuple
 import numpy as np
 import pandas as pd
@@ -27,6 +25,17 @@ def integrar_fuentes(
 
   Resuelve colisiones de nombre y año.
   """
+  columnas_ratings = {"id", "users_rated"}
+  columnas_details = {"id", "primary"}
+  faltantes_ratings = columnas_ratings.difference(df_ratings.columns)
+  faltantes_details = columnas_details.difference(df_details.columns)
+  if faltantes_ratings or faltantes_details:
+    raise ValueError(
+        "Faltan columnas requeridas para integrar las fuentes: "
+        f"ratings={sorted(faltantes_ratings)}, "
+        f"details={sorted(faltantes_details)}"
+    )
+
   ids_ratings = set(df_ratings["id"])
   ids_details = set(df_details["id"])
   discrepancias = ids_ratings.symmetric_difference(ids_details)
@@ -61,20 +70,33 @@ def integrar_fuentes(
   return df_merged
 
 
-def parsear_lista_segura(valor: str) -> List[str]:
+def parsear_lista_segura(valor: object) -> List[str]:
   """Convierte strings con formato de lista de Python a listas de forma segura."""
-  if pd.isna(valor) or not isinstance(valor, str):
+  if not isinstance(valor, str) or pd.isna(valor):
     return []
   try:
     res = ast.literal_eval(valor)
-    return res if isinstance(res, list) else []
+    return [item for item in res if isinstance(item, str)] if isinstance(res, list) else []
   except (ValueError, SyntaxError):
     return []
 
 
-def sanear_jugadores_y_duracion(df: pd.DataFrame) -> pd.DataFrame:
-  """Corrige inconsistencias físicas en jugadores y duraciones de partida."""
+def sanear_jugadores_y_duracion(
+    df: pd.DataFrame, max_duracion: int = 720
+) -> pd.DataFrame:
+  """Corrige jugadores y duración, devolviendo solo valores utilizables."""
   df_out = df.copy()
+  columnas_numericas = [
+      "minplayers",
+      "maxplayers",
+      "playingtime",
+      "minplaytime",
+      "maxplaytime",
+  ]
+  for columna in columnas_numericas:
+    if columna in df_out:
+      df_out[columna] = pd.to_numeric(df_out[columna], errors="coerce")
+  df_out["playingtime"] = df_out["playingtime"].astype(float)
 
   # 1. Corrección de inversión minplayers > maxplayers
   filtro_invertido = df_out["minplayers"] > df_out["maxplayers"]
@@ -86,7 +108,9 @@ def sanear_jugadores_y_duracion(df: pd.DataFrame) -> pd.DataFrame:
   # 2. Imputación de ceros en jugadores
   df_out["minplayers"] = df_out["minplayers"].replace(0, 1).fillna(1)
   df_out["maxplayers"] = np.where(
-      df_out["maxplayers"] <= 0, df_out["minplayers"], df_out["maxplayers"]
+      df_out["maxplayers"].isna() | (df_out["maxplayers"] <= 0),
+      df_out["minplayers"],
+      df_out["maxplayers"],
   )
 
   # 3. Tratamiento de duración (playingtime)
@@ -101,10 +125,12 @@ def sanear_jugadores_y_duracion(df: pd.DataFrame) -> pd.DataFrame:
 
   # Imputar duraciones nulas restantes con la mediana global (robusta a outliers)
   mediana_duracion = df_out["playingtime"].median()
+  if pd.isna(mediana_duracion):
+    mediana_duracion = 1
   df_out["playingtime"] = df_out["playingtime"].fillna(mediana_duracion)
 
   # 4. Excluir outliers de duración extrema (> 720 minutos / 12 horas)
-  df_out = df_out[df_out["playingtime"] <= 720].copy()
+  df_out = df_out[df_out["playingtime"] <= max_duracion].copy()
 
   return df_out
 
@@ -114,6 +140,9 @@ def categorizar_y_sanear_anios(df: pd.DataFrame) -> pd.DataFrame:
   df_out = df.copy()
 
   # Marcar históricos (previos a 1900 o negativos)
+  df_out["year_consolidated"] = pd.to_numeric(
+      df_out["year_consolidated"], errors="coerce"
+  )
   df_out["es_historico"] = df_out["year_consolidated"] < 1900
 
   # Si año es 0 o NaN y tiene información sustancial, imputar con mediana
@@ -121,7 +150,8 @@ def categorizar_y_sanear_anios(df: pd.DataFrame) -> pd.DataFrame:
       df_out["year_consolidated"].isna()
   )
   mediana_anio = df_out.loc[~mask_anio_invalido, "year_consolidated"].median()
-  df_out.loc[mask_anio_invalido, "year_consolidated"] = mediana_anio
+  if not pd.isna(mediana_anio):
+    df_out.loc[mask_anio_invalido, "year_consolidated"] = mediana_anio
 
   return df_out
 
@@ -149,8 +179,11 @@ def ejecutar_pipeline_limpieza(
       "boardgamepublisher",
   ]
   for col in columnas_lista:
+    parsed_col = col + "_parsed"
     if col in df_final.columns:
-      df_final[col + "_parsed"] = df_final[col].apply(parsear_lista_segura)
+      df_final[parsed_col] = df_final[col].apply(parsear_lista_segura)
+    else:
+      df_final[parsed_col] = [[] for _ in range(len(df_final))]
 
   # Variables de densidad de diseño
   df_final["num_mecanicas"] = df_final["boardgamemechanic_parsed"].apply(len)

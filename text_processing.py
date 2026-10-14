@@ -2,14 +2,14 @@
 
 import html
 import re
-from typing import List
+from typing import Dict, List, Tuple
 from nltk.corpus import stopwords
 import pandas as pd
-from sklearn.decomposition import LatentDirichletAllocation, NMF
+from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-def limpiar_texto_descripcion(texto: str) -> str:
+def limpiar_texto_descripcion(texto: object) -> str:
   """Limpia entidades HTML, tags, caracteres no alfanuméricos y normaliza texto."""
   if pd.isna(texto) or not isinstance(texto, str):
     return ""
@@ -30,18 +30,26 @@ def limpiar_texto_descripcion(texto: str) -> str:
 
 
 def extraer_topicos_nmf(
-    textos: List[str],
+  textos: List[str],
     n_topicos: int = 5,
     max_features: int = 3000,
     random_state: int = 42,
-):
+) -> Tuple[NMF, TfidfVectorizer, object, Dict[str, List[str]]]:
   """Aplica TF-IDF + NMF (Non-negative Matrix Factorization) para descubrir tópicos temáticos.
 
   NMF resulta más veloz y genera tópicos más cohesivos y diferenciados que LDA
   en descripciones breves.
   """
-  # Stopwords en inglés extendidas con términos genéricos del dominio de juegos
-  custom_stopwords = list(stopwords.words("english")) + [
+  try:
+    english_stopwords = list(stopwords.words("english"))
+  except LookupError as err:
+    raise RuntimeError(
+        "Falta el corpus de stopwords de NLTK. Ejecuta "
+        "nltk.download('stopwords') antes del análisis."
+    ) from err
+
+  # Stopwords en inglés extendidas con términos genéricos del dominio de juegos.
+  custom_stopwords = english_stopwords + [
       "game",
       "games",
       "player",
@@ -69,7 +77,10 @@ def extraer_topicos_nmf(
   matriz_tfidf = vectorizer.fit_transform(textos)
 
   nmf_model = NMF(
-      n_components=n_topicos, random_state=random_state, init="nndsvda"
+      n_components=n_topicos,
+      random_state=random_state,
+      init="nndsvda",
+      max_iter=500,
   )
   topicos_weights = nmf_model.fit_transform(matriz_tfidf)
 
@@ -77,7 +88,7 @@ def extraer_topicos_nmf(
   topicos_vocabulario = {}
 
   for topic_idx, topic in enumerate(nmf_model.components_):
-    top_words_idx = topic.argsort()[: -11 : -1]
+    top_words_idx = topic.argsort()[::-1][:10]
     top_words = [nombres_palabras[i] for i in top_words_idx]
     topicos_vocabulario[f"Topico_{topic_idx}"] = top_words
 
